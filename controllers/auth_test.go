@@ -1,4 +1,4 @@
-package test
+package controllers
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/abdullahmuhammed5/golang-gorm-postgres/models"
-
 	"github.com/stretchr/testify/assert"
 )
 

@@ -10,7 +10,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDB(config *Config) {
+func ConnectDB(config *Config) *gorm.DB {
 	var err error
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Africa/Cairo", config.DBHost, config.DBUserName, config.DBUserPassword, config.DBName, config.DBPort)
 
@@ -19,4 +19,5 @@ func ConnectDB(config *Config) {
 		log.Fatal("Failed to connect to the Database")
 	}
 	fmt.Println("? Connected Successfully to the Database")
+	return DB
 }

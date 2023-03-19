@@ -19,33 +19,37 @@ var (
 
 	UserController      controllers.UserController
 	UserRouteController routes.UserRouteController
+
+	App initializers.App
 )
 
 func init() {
-	config, err := initializers.LoadConfig(".")
-	if err != nil {
-		log.Fatal("? Could not load environment variables", err)
-	}
+	// config, err := initializers.LoadConfig(".")
+	// if err != nil {
+	// 	log.Fatal("? Could not load environment variables", err)
+	// }
 
-	initializers.ConnectDB(&config)
+	// initializers.ConnectDB(&config)
 
-	AuthController = controllers.NewAuthController(initializers.DB)
+	App = initializers.InitializeEnv(".", "app")
+
+	AuthController = controllers.NewAuthController(App.DB)
 	AuthRouteController = routes.NewAuthRouteController(AuthController)
 
-	UserController = controllers.NewUserController(initializers.DB)
+	UserController = controllers.NewUserController(App.DB)
 	UserRouteController = routes.NewRouteUserController(UserController)
 
 	server = gin.Default()
 }
 
 func main() {
-	config, err := initializers.LoadConfig(".")
-	if err != nil {
-		log.Fatal("? Could not load environment variables", err)
-	}
+	// config, err := initializers.LoadConfig(".")
+	// if err != nil {
+	// 	log.Fatal("? Could not load environment variables", err)
+	// }
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:8000", config.ClientOrigin}
+	corsConfig.AllowOrigins = []string{"http://localhost:8000", App.Config.ClientOrigin}
 	corsConfig.AllowCredentials = true
 
 	server.Use(cors.New(corsConfig))
@@ -59,5 +63,5 @@ func main() {
 	AuthRouteController.AuthRoute(router)
 	UserRouteController.UserRoute(router)
 
-	log.Fatal(server.Run(":" + config.ServerPort))
+	log.Fatal(server.Run(":" + App.Config.ServerPort))
 }
