@@ -16,7 +16,7 @@ var AppInstance App
 func InitializeEnv(path string, filename string) App {
 	config, err := LoadConfig(path, filename)
 	if err != nil {
-		log.Fatal("? Could not load environment variables", err)
+		log.Fatal("Could not load environment variables", err)
 	}
 
 	db := ConnectDB(&config)

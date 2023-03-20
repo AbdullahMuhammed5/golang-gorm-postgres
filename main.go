@@ -24,12 +24,6 @@ var (
 )
 
 func init() {
-	// config, err := initializers.LoadConfig(".")
-	// if err != nil {
-	// 	log.Fatal("? Could not load environment variables", err)
-	// }
-
-	// initializers.ConnectDB(&config)
 
 	App = initializers.InitializeEnv(".", "app")
 
@@ -43,10 +37,6 @@ func init() {
 }
 
 func main() {
-	// config, err := initializers.LoadConfig(".")
-	// if err != nil {
-	// 	log.Fatal("? Could not load environment variables", err)
-	// }
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:8000", App.Config.ClientOrigin}
