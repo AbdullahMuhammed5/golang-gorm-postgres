@@ -2,9 +2,12 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
+	gorm.Model
 	ID        uint   `gorm:"primary_key"`
 	Name      string `gorm:"type:varchar(255);not null"`
 	Email     string `gorm:"uniqueIndex;not null"`

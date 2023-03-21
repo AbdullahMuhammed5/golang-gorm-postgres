@@ -20,6 +20,9 @@ var (
 	UserController      controllers.UserController
 	UserRouteController routes.UserRouteController
 
+	TicketController      controllers.TicketController
+	TicketRouteController routes.TicketRouteController
+
 	App initializers.App
 )
 
@@ -32,6 +35,9 @@ func init() {
 
 	UserController = controllers.NewUserController(App.DB)
 	UserRouteController = routes.NewRouteUserController(UserController)
+
+	TicketController = controllers.NewTicketController(App.DB)
+	TicketRouteController = routes.NewRouteTicketController(TicketController)
 
 	server = gin.Default()
 }
@@ -52,6 +58,7 @@ func main() {
 
 	AuthRouteController.AuthRoute(router)
 	UserRouteController.UserRoute(router)
+	TicketRouteController.TicketRoute(router)
 
 	log.Fatal(server.Run(":" + App.Config.ServerPort))
 }

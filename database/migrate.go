@@ -34,7 +34,6 @@ func runManualMigration() {
 
 func main() {
 	runManualMigration()
-	initializers.AppInstance.DB.AutoMigrate(&models.User{})
-	initializers.AppInstance.DB.AutoMigrate(&models.Ticket{})
+	initializers.AppInstance.DB.AutoMigrate(&models.User{}, &models.Ticket{})
 	fmt.Println("Migration complete")
 }
