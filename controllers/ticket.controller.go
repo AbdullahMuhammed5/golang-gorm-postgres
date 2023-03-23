@@ -9,6 +9,7 @@ import (
 	"github.com/abdullahmuhammed5/golang-gorm-postgres/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
 )
 
 type TicketController struct {
@@ -81,6 +82,40 @@ func (tc *TicketController) UpdateTicket(ctx *gin.Context) {
 		Description: payload.Description,
 		CreatedAt:   updatedTicket.CreatedAt,
 		UpdatedAt:   now,
+	}
+
+	tc.DB.Model(&updatedTicket).Updates(ticketToUpdate)
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": updatedTicket})
+}
+
+func (tc *TicketController) UpdateTicketStatus(ctx *gin.Context) {
+	ticketId := ctx.Param("ticketId")
+
+	var payload *models.UpdateTicket
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+	var updatedTicket models.Ticket
+	result := tc.DB.First(&updatedTicket, "id = ?", ticketId)
+	if result.Error != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No ticket found with that ID"})
+		return
+	}
+	allowedStatus := []string{
+		string(models.NEW),
+		string(models.IN_PROGRESS),
+		string(models.RESOLVED),
+	}
+	if !utils.Contains(allowedStatus, payload.Status) {
+		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "Invalid status"})
+		return
+	}
+	now := time.Now()
+	ticketToUpdate := models.Ticket{
+		Status:    payload.Status,
+		UpdatedAt: now,
 	}
 
 	tc.DB.Model(&updatedTicket).Updates(ticketToUpdate)

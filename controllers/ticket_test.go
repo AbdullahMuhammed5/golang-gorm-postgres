@@ -53,7 +53,7 @@ func Test_ticket_UpdateTicket(t *testing.T) {
 	}
 	initializers.AppInstance.DB.Create(&ticket)
 
-	updatedTicket := models.CreateTicketRequest{
+	updatedTicket := models.UpdateTicket{
 		Title:       "Updated Title",
 		Description: "Updated Description",
 	}
@@ -71,6 +71,90 @@ func Test_ticket_UpdateTicket(t *testing.T) {
 		t.Fatal(writer)
 	}
 	if data["title"] != "Updated Title" || data["description"] != "Updated Description" {
+		t.Error("Something went wrong!")
+	}
+}
+
+func Test_ticket_OnlyAdminCanUpdateTicketStatus(t *testing.T) {
+	// Seed test data
+	ticket := &models.Ticket{
+		Title:       "Ticket 1",
+		Description: "Test Description",
+		CreatedBy:   1,
+		Status:      "NEW",
+	}
+	initializers.AppInstance.DB.Create(&ticket)
+
+	updatedTicket := models.UpdateTicket{
+		Status: "IN_PROGRESS",
+	}
+
+	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
+	writer := makeRequest("PATCH", url, updatedTicket, true)
+
+	assert.Equal(t, http.StatusUnauthorized, writer.Code)
+}
+
+func Test_ticket_UpdateTicketStatusToInProgress(t *testing.T) {
+	// Seed test data
+	ticket := &models.Ticket{
+		Title:       "Ticket 1",
+		Description: "Test Description",
+		CreatedBy:   1,
+		Status:      "NEW",
+	}
+	initializers.AppInstance.DB.Create(&ticket)
+
+	updatedTicket := models.UpdateTicket{
+		Status: "IN_PROGRESS",
+	}
+
+	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
+	writer := makeAdminRequest("PATCH", url, updatedTicket, true)
+
+	assert.Equal(t, http.StatusOK, writer.Code)
+
+	// Decode response body
+	var response models.Response
+	err := json.Unmarshal(writer.Body.Bytes(), &response)
+	data, _ := response.Data.(map[string]interface{})
+
+	if err != nil {
+		t.Fatal(writer)
+	}
+	if data["status"] != "IN_PROGRESS" {
+		t.Error("Something went wrong!")
+	}
+}
+
+func Test_ticket_UpdateTicketStatusToResolved(t *testing.T) {
+	// Seed test data
+	ticket := &models.Ticket{
+		Title:       "Ticket 1",
+		Description: "Test Description",
+		CreatedBy:   1,
+		Status:      "NEW",
+	}
+	initializers.AppInstance.DB.Create(&ticket)
+
+	updatedTicket := models.UpdateTicket{
+		Status: "RESOLVED",
+	}
+
+	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
+	writer := makeAdminRequest("PATCH", url, updatedTicket, true)
+
+	assert.Equal(t, http.StatusOK, writer.Code)
+
+	// Decode response body
+	var response models.Response
+	err := json.Unmarshal(writer.Body.Bytes(), &response)
+	data, _ := response.Data.(map[string]interface{})
+
+	if err != nil {
+		t.Fatal(writer)
+	}
+	if data["status"] != "RESOLVED" {
 		t.Error("Something went wrong!")
 	}
 }
@@ -97,6 +181,7 @@ func Test_ticket_deleteTicket(t *testing.T) {
 
 func Test_tecket_ListTickets(t *testing.T) {
 	// Seed test data
+	initializers.AppInstance.DB.Exec("DELETE FROM tickets;")
 	initializers.AppInstance.DB.Create(
 		&models.Ticket{
 			Title:       "Ticket 1",

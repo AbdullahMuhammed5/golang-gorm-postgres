@@ -23,4 +23,5 @@ func (pc *TicketRouteController) TicketRoute(rg *gin.RouterGroup) {
 	router.PATCH("/:ticketId", pc.ticketController.UpdateTicket)
 	router.GET("/:ticketId", pc.ticketController.FindTicketById)
 	router.DELETE("/:ticketId", pc.ticketController.DeleteTicket)
+	router.PATCH("/:ticketId/status", middleware.OnlyAdmin(), pc.ticketController.UpdateTicketStatus)
 }

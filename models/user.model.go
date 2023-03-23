@@ -6,6 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	SUPERADMIN string = "super_admin"
+	ADMIN      string = "admin"
+	USER       string = "user"
+)
+
 type User struct {
 	gorm.Model
 	ID        uint   `gorm:"primary_key"`

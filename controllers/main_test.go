@@ -70,6 +70,7 @@ func router() *gin.Engine {
 	routes.PATCH("/tickets/:ticketId", TicketControllerTest.UpdateTicket)
 	routes.GET("/tickets/:ticketId", TicketControllerTest.FindTicketById)
 	routes.DELETE("/tickets/:ticketId", TicketControllerTest.DeleteTicket)
+	routes.PATCH("/tickets/:ticketId/status", middleware.OnlyAdmin(), TicketControllerTest.UpdateTicketStatus)
 
 	return router
 }
@@ -91,6 +92,17 @@ func setup() {
 		PasswordConfirm: "test1234",
 	}
 	makeRequest("POST", "/api/auth/register", newUser, false)
+
+	// register an admin user
+	newAdmin := models.SignUpInput{
+		Name:            "admin",
+		Email:           "admin@email.com",
+		Password:        "test1234",
+		PasswordConfirm: "test1234",
+	}
+	makeRequest("POST", "/api/auth/register", newAdmin, false)
+	// make a user admin manually so we can use it in some tests
+	initializers.AppInstance.DB.Model(&models.User{}).Where("email = ?", "admin@email.com").Update("role", "admin")
 }
 
 func teardown() {
@@ -103,16 +115,27 @@ func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bo
 	requestBody, _ := json.Marshal(body)
 	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	if isAuthenticatedRequest {
-		request.Header.Add("Authorization", "Bearer "+bearerToken())
+		request.Header.Add("Authorization", "Bearer "+bearerToken("test@email.com"))
 	}
 	writer := httptest.NewRecorder()
 	router().ServeHTTP(writer, request)
 	return writer
 }
 
-func bearerToken() string {
+func makeAdminRequest(method, url string, body interface{}, isAuthenticatedRequest bool) *httptest.ResponseRecorder {
+	requestBody, _ := json.Marshal(body)
+	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
+	if isAuthenticatedRequest {
+		request.Header.Add("Authorization", "Bearer "+bearerToken("admin@email.com"))
+	}
+	writer := httptest.NewRecorder()
+	router().ServeHTTP(writer, request)
+	return writer
+}
+
+func bearerToken(email string) string {
 	user := models.SignInInput{
-		Email:    "test@email.com",
+		Email:    email,
 		Password: "test1234",
 	}
 

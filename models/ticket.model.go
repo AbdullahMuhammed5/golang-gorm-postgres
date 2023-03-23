@@ -9,7 +9,7 @@ import (
 
 type ticketStatus string
 
-const (
+var (
 	NEW         ticketStatus = "NEW"
 	IN_PROGRESS ticketStatus = "IN_PROGRESS"
 	RESOLVED    ticketStatus = "RESOLVED"
