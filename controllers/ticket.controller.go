@@ -29,7 +29,7 @@ func (tc *TicketController) CreateTicket(ctx *gin.Context) {
 	}
 
 	now := time.Now()
-	newTicket := models.Ticket{
+	newTicket := &models.Ticket{
 		Title:       payload.Title,
 		Description: payload.Description,
 		CreatedBy:   currentUser.ID,
@@ -48,7 +48,17 @@ func (tc *TicketController) CreateTicket(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"status": "success", "data": newTicket})
+	ticketResponse := &models.TicketResponse{
+		ID:          newTicket.ID,
+		Title:       newTicket.Title,
+		Description: newTicket.Description,
+		Owner:       newTicket.Owner,
+		Status:      newTicket.Status,
+		CreatedAt:   newTicket.CreatedAt,
+		UpdatedAt:   newTicket.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"status": "success", "data": ticketResponse})
 }
 
 func (tc *TicketController) UpdateTicket(ctx *gin.Context) {
@@ -119,5 +129,5 @@ func (tc *TicketController) DeleteTicket(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, gin.H{"status": "success", "message": "Deleted Successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": "Deleted Successfully"})
 }

@@ -24,6 +24,8 @@ var (
 
 	UserControllerTest UserController
 	// UserRouteController routes.UserRouteController
+
+	TicketControllerTest TicketController
 )
 
 func TestMain(m *testing.M) {
@@ -51,30 +53,50 @@ func TestMain(m *testing.M) {
 
 func router() *gin.Engine {
 	AuthControllerTest = NewAuthController(App.DB)
-
 	UserControllerTest = NewUserController(App.DB)
+	TicketControllerTest = NewTicketController(App.DB)
 
 	router := gin.Default()
-	publicRoutes := router.Group("/api")
-	publicRoutes.POST("/auth/register", AuthControllerTest.SignUpUser)
-	publicRoutes.POST("/auth/login", AuthControllerTest.SignInUser)
-	publicRoutes.GET("/auth/refresh", AuthControllerTest.RefreshAccessToken)
+	routes := router.Group("/api")
+	routes.POST("/auth/register", AuthControllerTest.SignUpUser)
+	routes.POST("/auth/login", AuthControllerTest.SignInUser)
+	routes.GET("/auth/refresh", AuthControllerTest.RefreshAccessToken)
 
-	publicRoutes.GET("/users/me", middleware.DeserializeUser(), UserControllerTest.GetMe)
+	routes.GET("/users/me", middleware.DeserializeUser(), UserControllerTest.GetMe)
+
+	routes.Use(middleware.DeserializeUser())
+	routes.POST("/tickets", TicketControllerTest.CreateTicket)
+	routes.GET("/tickets", TicketControllerTest.FindTickets)
+	routes.PATCH("/tickets/:ticketId", TicketControllerTest.UpdateTicket)
+	routes.GET("/tickets/:ticketId", TicketControllerTest.FindTicketById)
+	routes.DELETE("/tickets/:ticketId", TicketControllerTest.DeleteTicket)
 
 	return router
 }
 
 func setup() {
 	App = initializers.InitializeEnv("../", "app.test")
-	App.DB.AutoMigrate(&models.User{})
-	// database.Database.AutoMigrate(&models.Entry{})
+	App.DB.Exec(`
+		CREATE TYPE ticket_status AS ENUM (
+			'NEW',
+			'IN_PROGRESS',
+			'RESOLVED'
+		);
+	`)
+	App.DB.AutoMigrate(&models.User{}, &models.Ticket{})
+	newUser := models.SignUpInput{
+		Name:            "Test",
+		Email:           "test@email.com",
+		Password:        "test1234",
+		PasswordConfirm: "test1234",
+	}
+	makeRequest("POST", "/api/auth/register", newUser, false)
 }
 
 func teardown() {
 	migrator := App.DB.Migrator()
-	migrator.DropTable(&models.User{})
-	// migrator.DropTable(&models.Entry{})
+	migrator.DropTable(&models.User{}, &models.Ticket{})
+	App.DB.Exec(`DROP TYPE ticket_status;`)
 }
 
 func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bool) *httptest.ResponseRecorder {
@@ -90,7 +112,7 @@ func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bo
 
 func bearerToken() string {
 	user := models.SignInInput{
-		Email:    "abdullah@email.com",
+		Email:    "test@email.com",
 		Password: "test1234",
 	}
 
@@ -99,3 +121,19 @@ func bearerToken() string {
 	json.Unmarshal(writer.Body.Bytes(), &response)
 	return response["access_token"]
 }
+
+// func bearerToken() string {
+// 	user := models.SignUpInput{
+// 		Name:            "Test",
+// 		Email:           "testuser@email.com",
+// 		Password:        "test1234",
+// 		PasswordConfirm: "test1234",
+// 	}
+
+// 	writer := makeRequest("POST", "/api/auth/register", user, false)
+// 	var response map[string]interface{}
+// 	json.Unmarshal(writer.Body.Bytes(), &response)
+// 	data, _ := response["data"].(map[string]interface{})
+// 	token, _ := data["access_token"].(string)
+// 	return token
+// }

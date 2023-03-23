@@ -52,3 +52,20 @@ type UpdateTicket struct {
 	CreateAt    time.Time `json:"created_at,omitempty"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }
+
+type TicketResponse struct {
+	ID          uint      `json:"id,omitempty"`
+	Title       string    `json:"title,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Status      string    `json:"status,omitempty"`
+	CreatedBy   uint      `json:"created_by,omitempty"`
+	Owner       User      `json:"user,omitempty"`
+	ResolvedBy  uint      `json:"resolved_by,omitempty"`
+	Admin       User      `json:"admin,omitempty"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+}
+
+type Response struct {
+	Data interface{} `json:"data"`
+}
