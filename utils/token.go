@@ -10,7 +10,6 @@ import (
 
 func CreateToken(ttl time.Duration, payload interface{}, privateKey string) (string, error) {
 	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
-	// fmt.Println(privateKey)
 	if err != nil {
 		return "", fmt.Errorf("could not decode key: %w", err)
 	}
