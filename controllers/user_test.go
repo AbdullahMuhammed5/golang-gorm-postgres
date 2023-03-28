@@ -8,6 +8,6 @@ import (
 )
 
 func TestGetProfile(t *testing.T) {
-	writer := makeRequestV1("GET", "/api/users/me", nil, &TestingConfigs.userToken)
+	writer := makeRequest("GET", "/api/users/me", nil, &TestingConfigs.userToken)
 	assert.Equal(t, http.StatusOK, writer.Code)
 }

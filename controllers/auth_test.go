@@ -16,7 +16,7 @@ func Test_auth_register(t *testing.T) {
 		Password:        "test1234",
 		PasswordConfirm: "test1234",
 	}
-	writer := makeRequestV1("POST", "/api/auth/register", newUser, nil)
+	writer := makeRequest("POST", "/api/auth/register", newUser, nil)
 	assert.Equal(t, http.StatusCreated, writer.Code)
 }
 
@@ -26,7 +26,7 @@ func Test_auth_login(t *testing.T) {
 		Password: "test1234",
 	}
 
-	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
+	writer := makeRequest("POST", "/api/auth/login", user, nil)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -38,7 +38,7 @@ func Test_auth_login(t *testing.T) {
 }
 
 // func Test_auth_refresh_token(t *testing.T) {
-// 	writer := makeRequestV1("GET", "/api/auth/refresh", nil, &TestingConfigs.userToken)
+// 	writer := makeRequest("GET", "/api/auth/refresh", nil, &TestingConfigs.userToken)
 
 // 	assert.Equal(t, http.StatusOK, writer.Code)
 

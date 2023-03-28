@@ -18,7 +18,7 @@ func Test_ticket_CreateTicket(t *testing.T) {
 		Description: "Test Description",
 	}
 
-	writer := makeRequestV1("POST", "/api/tickets", ticket, &TestingConfigs.userToken)
+	writer := makeRequest("POST", "/api/tickets", ticket, &TestingConfigs.userToken)
 
 	assert.Equal(t, http.StatusCreated, writer.Code)
 
@@ -38,7 +38,7 @@ func Test_ticket_CreateTicket_validationsFailed(t *testing.T) {
 		Description: "Test Description",
 	}
 
-	writer := makeRequestV1("POST", "/api/tickets", ticket, &TestingConfigs.userToken)
+	writer := makeRequest("POST", "/api/tickets", ticket, &TestingConfigs.userToken)
 
 	assert.Equal(t, http.StatusBadRequest, writer.Code)
 }
@@ -58,7 +58,7 @@ func Test_ticket_UpdateTicket(t *testing.T) {
 		Description: "Updated Description",
 	}
 
-	writer := makeRequestV1("PATCH", "/api/tickets/"+strconv.FormatUint(uint64(ticket.ID), 10), updatedTicket, &TestingConfigs.userToken)
+	writer := makeRequest("PATCH", "/api/tickets/"+strconv.FormatUint(uint64(ticket.ID), 10), updatedTicket, &TestingConfigs.userToken)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -90,7 +90,7 @@ func Test_ticket_OnlyAdminCanUpdateTicketStatus(t *testing.T) {
 	}
 
 	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
-	writer := makeRequestV1("PATCH", url, updatedTicket, &TestingConfigs.userToken)
+	writer := makeRequest("PATCH", url, updatedTicket, &TestingConfigs.userToken)
 
 	assert.Equal(t, http.StatusUnauthorized, writer.Code)
 }
@@ -110,7 +110,7 @@ func Test_ticket_UpdateTicketStatusToInProgress(t *testing.T) {
 	}
 
 	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
-	writer := makeRequestV1("PATCH", url, updatedTicket, &TestingConfigs.adminToken)
+	writer := makeRequest("PATCH", url, updatedTicket, &TestingConfigs.adminToken)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -142,7 +142,7 @@ func Test_ticket_UpdateTicketStatusToResolved(t *testing.T) {
 	}
 
 	url := "/api/tickets/" + strconv.FormatUint(uint64(ticket.ID), 10) + "/status"
-	writer := makeRequestV1("PATCH", url, updatedTicket, &TestingConfigs.adminToken)
+	writer := makeRequest("PATCH", url, updatedTicket, &TestingConfigs.adminToken)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -169,7 +169,7 @@ func Test_ticket_deleteTicket(t *testing.T) {
 	}
 	initializers.AppInstance.DB.Create(&ticket)
 
-	writer := makeRequestV1("DELETE", "/api/tickets/"+strconv.FormatUint(uint64(ticket.ID), 10), nil, &TestingConfigs.userToken)
+	writer := makeRequest("DELETE", "/api/tickets/"+strconv.FormatUint(uint64(ticket.ID), 10), nil, &TestingConfigs.userToken)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -198,7 +198,7 @@ func Test_ticket_ListTickets(t *testing.T) {
 		})
 
 	// Send GET request to /tickets endpoint
-	writer := makeRequestV1("GET", "/api/tickets", nil, &TestingConfigs.userToken)
+	writer := makeRequest("GET", "/api/tickets", nil, &TestingConfigs.userToken)
 
 	// Check response status code
 	assert.Equal(t, http.StatusOK, writer.Code)

@@ -82,8 +82,8 @@ func setup() {
 	user := models.User{Name: "Test", Email: "test@email.com", Password: hashedPassword, Role: "user"}
 	admin := models.User{Name: "Admin", Email: "admin@email.com", Password: hashedPassword, Role: "admin"}
 
-	initializers.AppInstance.DB.Create(&user)
-	initializers.AppInstance.DB.Create(&admin)
+	App.DB.Create(&user)
+	App.DB.Create(&admin)
 
 	TestingConfigs.adminToken = LoginAs("admin@email.com")
 	TestingConfigs.userToken = LoginAs("test@email.com")
@@ -95,7 +95,7 @@ func teardown() {
 	App.DB.Exec(`DROP TYPE ticket_status;`)
 }
 
-func makeRequestV1(method, url string, body interface{}, accessToken *string) *httptest.ResponseRecorder {
+func makeRequest(method, url string, body interface{}, accessToken *string) *httptest.ResponseRecorder {
 	requestBody, _ := json.Marshal(body)
 	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	if accessToken != nil {
@@ -112,7 +112,7 @@ func bearerToken(email string) string {
 		Password: "test1234",
 	}
 
-	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
+	writer := makeRequest("POST", "/api/auth/login", user, nil)
 	var response map[string]string
 	json.Unmarshal(writer.Body.Bytes(), &response)
 	return response["access_token"]
@@ -124,7 +124,7 @@ func LoginAs(email string) string {
 		Password: "test1234",
 	}
 
-	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
+	writer := makeRequest("POST", "/api/auth/login", user, nil)
 	var response map[string]string
 	json.Unmarshal(writer.Body.Bytes(), &response)
 	return response["access_token"]
