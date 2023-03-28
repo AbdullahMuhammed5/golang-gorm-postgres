@@ -74,7 +74,7 @@ func (ac *AuthController) SignUpUser(ctx *gin.Context) {
 		UpdatedAt: newUser.UpdatedAt,
 	}
 
-	access_token := generteToken(ctx, &newUser)
+	access_token := generateToken(ctx, &newUser)
 	if access_token == nil {
 		return
 	}
@@ -128,7 +128,7 @@ func (ac *AuthController) RefreshAccessToken(ctx *gin.Context) {
 	message := "could not refresh access token"
 
 	cookie, err := ctx.Cookie("refresh_token")
-	// fmt.Println("kokie", err)
+	// fmt.Println("cookie", err)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": message})
 		return
@@ -170,8 +170,8 @@ func (ac *AuthController) LogoutUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
-func generteToken(ctx *gin.Context, user *models.User) *string {
-	config := *initializers.AppInstance.Config
+func generateToken(ctx *gin.Context, user *models.User) *string {
+	config := initializers.AppInstance.Config
 	// Generate Tokens
 	access_token, err := utils.CreateToken(config.AccessTokenExpiresIn, user.ID, config.AccessTokenPrivateKey)
 	if err != nil {

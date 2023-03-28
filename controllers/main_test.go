@@ -11,21 +11,27 @@ import (
 	"github.com/abdullahmuhammed5/golang-gorm-postgres/initializers"
 	"github.com/abdullahmuhammed5/golang-gorm-postgres/middleware"
 	"github.com/abdullahmuhammed5/golang-gorm-postgres/models"
+	"github.com/abdullahmuhammed5/golang-gorm-postgres/utils"
 
 	"github.com/gin-gonic/gin"
 )
+
+type testingConfigs struct {
+	adminToken string
+	userToken  string
+}
 
 var (
 	server *gin.Engine
 	App    initializers.App
 
 	AuthControllerTest AuthController
-	// AuthRouteController routes.AuthRouteController
 
 	UserControllerTest UserController
-	// UserRouteController routes.UserRouteController
 
 	TicketControllerTest TicketController
+
+	TestingConfigs testingConfigs
 )
 
 func TestMain(m *testing.M) {
@@ -36,20 +42,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(exitCode)
 }
-
-// func router() *gin.Engine {
-
-// 	AuthController = controllers.NewAuthController(initializers.DB)
-// 	AuthRouteController = routes.NewAuthRouteController(AuthController)
-
-// 	server := gin.Default()
-
-// 	router := server.Group("/api")
-
-// 	AuthRouteController.AuthRoute(router)
-
-// 	return server
-// }
 
 func router() *gin.Engine {
 	AuthControllerTest = NewAuthController(App.DB)
@@ -85,24 +77,16 @@ func setup() {
 		);
 	`)
 	App.DB.AutoMigrate(&models.User{}, &models.Ticket{})
-	newUser := models.SignUpInput{
-		Name:            "Test",
-		Email:           "test@email.com",
-		Password:        "test1234",
-		PasswordConfirm: "test1234",
-	}
-	makeRequest("POST", "/api/auth/register", newUser, false)
 
-	// register an admin user
-	newAdmin := models.SignUpInput{
-		Name:            "admin",
-		Email:           "admin@email.com",
-		Password:        "test1234",
-		PasswordConfirm: "test1234",
-	}
-	makeRequest("POST", "/api/auth/register", newAdmin, false)
-	// make a user admin manually so we can use it in some tests
-	initializers.AppInstance.DB.Model(&models.User{}).Where("email = ?", "admin@email.com").Update("role", "admin")
+	hashedPassword, _ := utils.HashPassword("test1234")
+	user := models.User{Name: "Test", Email: "test@email.com", Password: hashedPassword, Role: "user"}
+	admin := models.User{Name: "Admin", Email: "admin@email.com", Password: hashedPassword, Role: "admin"}
+
+	initializers.AppInstance.DB.Create(&user)
+	initializers.AppInstance.DB.Create(&admin)
+
+	TestingConfigs.adminToken = LoginAs("admin@email.com")
+	TestingConfigs.userToken = LoginAs("test@email.com")
 }
 
 func teardown() {
@@ -111,22 +95,11 @@ func teardown() {
 	App.DB.Exec(`DROP TYPE ticket_status;`)
 }
 
-func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bool) *httptest.ResponseRecorder {
+func makeRequestV1(method, url string, body interface{}, accessToken *string) *httptest.ResponseRecorder {
 	requestBody, _ := json.Marshal(body)
 	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
-	if isAuthenticatedRequest {
-		request.Header.Add("Authorization", "Bearer "+bearerToken("test@email.com"))
-	}
-	writer := httptest.NewRecorder()
-	router().ServeHTTP(writer, request)
-	return writer
-}
-
-func makeAdminRequest(method, url string, body interface{}, isAuthenticatedRequest bool) *httptest.ResponseRecorder {
-	requestBody, _ := json.Marshal(body)
-	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
-	if isAuthenticatedRequest {
-		request.Header.Add("Authorization", "Bearer "+bearerToken("admin@email.com"))
+	if accessToken != nil {
+		request.Header.Add("Authorization", "Bearer "+*accessToken)
 	}
 	writer := httptest.NewRecorder()
 	router().ServeHTTP(writer, request)
@@ -139,24 +112,20 @@ func bearerToken(email string) string {
 		Password: "test1234",
 	}
 
-	writer := makeRequest("POST", "/api/auth/login", user, false)
+	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
 	var response map[string]string
 	json.Unmarshal(writer.Body.Bytes(), &response)
 	return response["access_token"]
 }
 
-// func bearerToken() string {
-// 	user := models.SignUpInput{
-// 		Name:            "Test",
-// 		Email:           "testuser@email.com",
-// 		Password:        "test1234",
-// 		PasswordConfirm: "test1234",
-// 	}
+func LoginAs(email string) string {
+	user := models.SignInInput{
+		Email:    email,
+		Password: "test1234",
+	}
 
-// 	writer := makeRequest("POST", "/api/auth/register", user, false)
-// 	var response map[string]interface{}
-// 	json.Unmarshal(writer.Body.Bytes(), &response)
-// 	data, _ := response["data"].(map[string]interface{})
-// 	token, _ := data["access_token"].(string)
-// 	return token
-// }
+	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
+	var response map[string]string
+	json.Unmarshal(writer.Body.Bytes(), &response)
+	return response["access_token"]
+}

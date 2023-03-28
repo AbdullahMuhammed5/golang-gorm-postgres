@@ -9,24 +9,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegister(t *testing.T) {
+func Test_auth_register(t *testing.T) {
 	newUser := models.SignUpInput{
 		Name:            "abdullah",
 		Email:           "abdullah@email.com",
 		Password:        "test1234",
 		PasswordConfirm: "test1234",
 	}
-	writer := makeRequest("POST", "/api/auth/register", newUser, false)
+	writer := makeRequestV1("POST", "/api/auth/register", newUser, nil)
 	assert.Equal(t, http.StatusCreated, writer.Code)
 }
 
-func TestLogin(t *testing.T) {
+func Test_auth_login(t *testing.T) {
 	user := models.SignInInput{
 		Email:    "abdullah@email.com",
 		Password: "test1234",
 	}
 
-	writer := makeRequest("POST", "/api/auth/login", user, false)
+	writer := makeRequestV1("POST", "/api/auth/login", user, nil)
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
@@ -37,8 +37,8 @@ func TestLogin(t *testing.T) {
 	assert.Equal(t, true, exists)
 }
 
-// func TestRefreshToken(t *testing.T) {
-// 	writer := makeRequest("GET", "/api/auth/refresh", nil, true)
+// func Test_auth_refresh_token(t *testing.T) {
+// 	writer := makeRequestV1("GET", "/api/auth/refresh", nil, &TestingConfigs.userToken)
 
 // 	assert.Equal(t, http.StatusOK, writer.Code)
 
